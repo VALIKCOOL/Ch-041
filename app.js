@@ -1,56 +1,48 @@
-'use strict'
+'use strict';
 var express = require('express'),
-    fs = require("fs"),
-    app = express(),
-    bodyParser = require('body-parser'),
-    favicon = require('serve-favicon'),
-    path = require('path'),
-    morgan = require('morgan'),
-    mongoose = require('mongoose'),
-    passport = require('passport'),
-    multer = require('multer');
-var port = 8080;
+	fs = require("fs"),
+	app = express(),
+	session = require('express-session'),
+	bodyParser = require('body-parser'),
+	favicon = require('serve-favicon'),
+	path = require('path'),
+	morgan = require('morgan'),
+	multer = require('multer'),
+	cors = require('cors'),
+	logger = require('morgan'),
+	User = require('./server/models/Users'),
+	mongoose = require('mongoose'),
+	flash = require('express-flash');
 
-
-// uncomment after placing your favicon in /public
-app.use(favicon(path.join(__dirname,'client','assets','images','favicon.ico')));
+app.use(favicon(path.join(__dirname, 'server', 'assets', 'images', 'favicon.ico')));
 require('./server/models/Feeds');
 require('./server/models/Articles');
 require('./server/models/Users');
-
-require('./server/config/passport');
-
+require('./server/models/Advised');
 
 var routes = require('./server/routes/index');
 
-mongoose.connect('mongodb://localhost/feeds');
+app.set('port', process.env.PORT || 8080);
+app.set('base url', process.env.URL || 'http://localhost');
 
-//app.set('views', path.join(__dirname, 'client'));
-//app.set('view engine', 'html');
-app.use(function (req, res, next) { //allow cross origin requests
-    res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
-    res.header("Access-Control-Allow-Origin", "http://localhost");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
+mongoose.connect(process.env.DB_URL || 'mongodb://feedsUser:Ch-041feedsUser@ds044979.mlab.com:44979/feeds');
+mongoose.connection.on('error', function (err) {
+	console.log('Error: Could not connect to MongoDB');
 });
-
-
-app.use(express.static('./client'));
-app.use(express.static('./server/uploads'));
-app.use(bodyParser.json()); // support json encoded bodies
+app.use(cors());
+app.use(function (req, res, next) {
+	res.header('Access-Control-Allow-Origin', process.env.allowOrigin || 'http://localhost');
+	res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+	res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+	next();
+});
+app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({
-    extended: true
-})); // support encoded bodies
-//app.use(express.session({ secret: 'MY_SECRET' })); 
+	extended: true
+})); 
 
-app.use(passport.initialize());
-//app.use(passport.session()); 
+app.use(express.static(__dirname + '/dist'));
 app.use('/', routes);
 
-app.use(morgan('dev'));
-
-app.listen(port, function () {
-    console.log('Server running on port 8080!');
-});
-
+app.listen(app.get('port'));
 module.exports = app;

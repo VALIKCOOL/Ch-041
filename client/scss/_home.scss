@@ -1,48 +1,136 @@
-body {
-    background-color: #fff;
+#home-container {
+    font-family: 'Roboto', sans-serif;
+
+    img {
+        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.76);
+    }
+
+    .not-visible {
+        visibility: hidden;
+    }
 }
 
-#all {
-    background-color: #e8e8e8;
-}
-
-#items {
-    padding-left: 30px;
-}
-
-#home_container {
-    background: url('../assets/images/rss-header.jpg');
+#home{
+    background-color: #E2E2E1;
     background-size: cover;
     color: white;
-    //background: lightgray center fixed;
-    //background-size: cover;
     width: 100%;
-    height: 100%;
+    height: 35em;
     position: relative;
+
     .welcometo {
-        font-size: 63px;
-        margin-bottom: 50px;
-        @media screen and (max-width: 768px) {
-            font-size: 36px;
+        color: black;
+        font-weight: 300;
+        font-size: 40px;
+        margin-bottom: 0.5em;
+    }
+
+    .welometo-under {
+        color: black;
+        font-weight: 300;
+        font-size: 20px;
+        margin-bottom: 1em;
+    }
+}
+
+.home-image {
+    width: 60em;
+    margin-top: 14em;
+
+    img {
+        width: 100%;
+    }
+}
+
+.second-layer {
+    padding-top: 22em;
+    height: 40em;
+    width: 100%;
+    background-color: #616161;
+
+    .welcometo-under {
+        color: white;
+        font-weight: 300;
+        font-size: 20px;
+        margin-bottom: 1em;
+    }
+}
+
+.third-layer {
+    overflow: hidden;
+    padding-top: 4em;
+    height: 40em;
+    width: 100%;
+    background-color: #E2E2E1;
+
+    .home-same-height {
+        @media screen and (min-width: 992px) {
+            height: 32em;
+        }
+    }
+
+    .welcometo-under {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: black;
+        font-weight: 300;
+        font-size: 20px;
+        margin-bottom: 1em;
+
+        @media screen and (max-width: 992px) {
+            display: block;
+            position: relative;
         }
     }
 }
 
-@media only screen and (min-width: 757px) and (max-width: 1070px) {
-    #home_container {
-        .welcometo {
-            font-size: 43px;
-            margin-bottom: 50px;
+.fourth-layer {
+    overflow: hidden;
+    padding-top: 4em;
+    height: 40em;
+    width: 100%;
+    background-color: #616161;
+
+    @media screen and (max-width: 992px) {
+        height: 40em;
+        .top-offset-mobile{
+            margin-top: 10em;
         }
     }
-}
 
-@media screen and (max-width: 757px) {
-    #home_container {
-        background: url('../assets/images/rss-header.jpg') 80% 100% no-repeat;
-        background-size: cover;
-        .welcometo {
-            margin-bottom: 50px;
+    .add-feed-img {
+        overflow: hidden;
+        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.76);
+
+        img {
+            width: 120%;
+        }
+    }
+
+    .home-same-height {
+        @media screen and (min-width: 992px) {
+            height: 32em;
+        }
+    }
+
+    .welcometo-under {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-weight: 300;
+        font-size: 20px;
+        margin-bottom: 1em;
+
+        @media screen and (max-width: 992px) {
+            display: block;
+            position: relative;
+            top: auto;
+            left: auto;
+            transform: none;
         }
     }
 }

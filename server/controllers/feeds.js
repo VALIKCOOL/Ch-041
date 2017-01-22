@@ -1,238 +1,291 @@
-var passport = require('passport'),
-    mongoose = require('mongoose'),
-    User = mongoose.model('User'),
-    Feed = mongoose.model('Feed'),
-    Article = mongoose.model('Article');
-
-var ERRORS = {
-    choose_cat: 'Choose category',
-    cant_find_user: 'Can\'t find user',
-    feed_already_added: 'You have already added this feed ',
-    fav_article_already_added: 'You have already added this article to favourites',
-    feed_not_found: 'Feed not found',
-    article_not_found: 'Article not found',
-    server_error: 'Server error',
-    internal_error: 'Internal error(%d): %s'
-};
-
-module.exports.userParam = function (req, res, next, id) {
-    var query = User.findById(id);
-
-    query.exec(function (err, user) {
-        if (err) {
-            console.log("ERROR: " + err);
-            return next(err);
-        }
-        if (!user) {
-            return next(new Error(ERRORS.cant_find_user));
-        }
-        req.user = user;
-        return next();
-    });
-};
+var mongoose = require('mongoose'),
+	fs = require("fs"),
+	User = mongoose.model('User'),
+	Feed = mongoose.model('Feed'),
+	Article = mongoose.model('Article'),
+	Advice = mongoose.model('Advice'),
+	config = require('../config/config'),
+	msg = require('../config/msg');
 
 module.exports.allFeed = function (req, res, next) {
-    req.user.populate('feeds', function (err, user) {
-        var unique = {},
-            distinct = [];
-
-        if (err) {
-            console.log("ERROR: " + err);
-            return next(err);
-        }
-
-        //Selecting all uniq user categories
-        for (var i in user.feeds) {
-            if (typeof (unique[user.feeds[i].category]) === "undefined") {
-                distinct.push(user.feeds[i].category);
-            }
-            unique[user.feeds[i].category] = 0;
-        }
-
-        //Writing data to dictionary with category as keys and feeds as values
-        var feedsDictionary = [];
-        var containsKey = function (key) {
-                for (var i = 0; i < feedsDictionary.length; i++) {
-                    if (feedsDictionary[i].key === key) {
-                        return i;
-                    }
-                }
-                return -1;
-            }
-            // Push categories as keys
-        for (var i = 0; i < distinct.length - 1; i++) {
-            feedsDictionary.push({
-                key: distinct[i],
-                values: []
-            });
-        }
-        // Push feeds as values
-        for (var i = 0; i < user.feeds.length; i++) {
-            var j = containsKey(user.feeds[i].category);
-            if (j >= 0) {
-                feedsDictionary[j].values.push(user.feeds[i]);
-            }
-        }
-        res.json(feedsDictionary);
-        // Pushing favourites articles with "Favourites" key
-    });
+	req.user.populate("feedsDictionary.feeds", function (err, user) {
+		res.json(user.feedsDictionary);
+	});
 }
 
-module.exports.allFavourites = function (req, res, next) {
-    req.user.populate({
-        path: 'favourites',
-        model: 'Article'
-    }, function (err, user) {
-        var favourites = [];
-        console.log("_____Favourites______")
-        console.log(user);
-        for (var i = 0; i < user.favourites.length; i++) {
-            favourites.push(user.favourites[i]);
-        }
-        res.json(favourites);
-    });
+module.exports.getSingleFeed = function (req, res, next) {
+	if (!req.params.id || !req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+		return res.status(404).json({
+			message: msg.ERRORS.not_found
+		});
+	}
+
+	Feed.findById(req.params.id, function (err, feed) {
+		if (err) {
+			return next(err);
+		}
+		if (!feed) {
+			return res.status(404).json({
+				message: msg.ERRORS.not_found
+			});
+		}
+		else {
+			res.json(feed);
+		}
+	});
 }
 
 module.exports.add = function (req, res, next) {
-    if (req.body.category === undefined) {
-        return res.status(400).json({
-            message: ERRORS.choose_cat
-        });
-    }
-    req.user.populate("feeds", function (err, user) {
-        console.log(user);
-        if (!user.feeds.find(function (elem) {
-                console.log("   RSS: " + elem.rsslink);
-                console.log("REQRSS: " + req.body.rsslink);
-                return elem.rsslink == req.body.rsslink;
-            })) {
-            var feed = new Feed(req.body);
-            feed.save(function (err, feed) {
-                if (err) {
-                    return next(err);
-                }
-                user.feeds.push(feed);
-                user.save(function (err, user) {
-                    if (err) {
-                        return next(err);
-                    }
-                    res.json(feed);
-                });
-            });
-        } else {
-            return res.status(400).json({
-                message: ERRORS.feed_already_added
-            });
-        }
-    });
+	if (req.body.rsslink === undefined) {
+		return res.status(400).json({
+			message: msg.ERRORS.enter_feed_url
+		});
+	}
+	
+	if (req.body.category === undefined) {
+		return res.status(400).json({
+			message: msg.ERRORS.choose_cat
+		});
+	}
 
+	Feed.findOne({ rsslink: req.body.rsslink }, function (err, feed) {
+		if (err) {
+			return next(err);
+		}
+
+		var currentFeed = feed;
+
+		req.user.populate("feedsDictionary.feeds", function (err, user) {
+			var foundCategory = null;
+			for (var i = 0; i < user.feedsDictionary.length; i++) {
+				if (user.feedsDictionary[i].category === req.body.category) {
+					foundCategory = user.feedsDictionary[i];
+				}
+				for (var j = 0; j < user.feedsDictionary[i].feeds.length; j++) {
+					if (user.feedsDictionary[i].feeds[j].rsslink === req.body.rsslink) {
+						return res.status(400).json({
+							message: msg.ERRORS.feed_already_added,
+							id: user.feedsDictionary[i].feeds[j]._id,
+							category: user.feedsDictionary[i].category
+						});
+					}
+				}
+			}
+
+			if (currentFeed) {
+				currentFeed.totalSubscriptions++;
+				currentFeed.currentSubscriptions++;
+				currentFeed.save(function (err, currentFeed) {
+					if (err) {
+						return next(err);
+					}
+					if (!foundCategory) {
+						var newFeedElement = {
+							category: req.body.category,
+							feeds: []
+						}
+						newFeedElement.feeds.push(currentFeed);
+						req.user.feedsDictionary.push(newFeedElement);
+					}
+					else {
+						foundCategory.feeds.push(currentFeed);
+					}
+					req.user.save(function (err, user) {
+						if (err) {
+							return next(err);
+						}
+						res.json(currentFeed);
+					});
+				});		        
+			}
+
+			if (!currentFeed) {
+				var feed = new Feed(req.body);
+				feed.totalSubscriptions = 1;
+				feed.currentSubscriptions = 1;
+				feed.save(function (err, feed) {
+					if (err) {
+						return next(err);
+					}
+					if (!foundCategory) {		                   
+							var newFeedElement = {
+								category: req.body.category,
+								feeds: []
+							}
+							newFeedElement.feeds.push(feed);
+							req.user.feedsDictionary.push(newFeedElement);
+					}
+					else {
+						foundCategory.feeds.push(feed);
+					}
+					req.user.save(function (err, user) {
+						if (err) {
+							return next(err);
+						}
+						res.json(feed);
+					});
+				});
+			}
+		});
+	});
 };
-
-module.exports.addFavArticle = function (req, res, next) {
-    req.user.populate({
-        path: 'favourites',
-        model: 'Article'
-    }, function (err, user) {
-        if (user.favourites.find(function (elem) {
-                console.log(elem.link);
-                console.log(req.body.link);
-                return elem.link === req.body.link;
-            })) {
-            console.log("____________ALREADY ADDED_________________");
-            res.statusCode = 400;
-            return res.send({
-                message: ERRORS.fav_article_already_added
-            });
-        } else {
-            var article = new Article(req.body);
-            //    console.log("-------------------article------------");
-            //    console.log(article);
-            //    console.log("-------------------end------------");
-            article.save(function (err, article) {
-                if (err) {
-                    return next(err);
-                }
-                req.user.favourites.push(article);
-                //        console.log("ARRRAAYY");
-                //        console.log(req.user.favourites);
-                req.user.save(function (err, user) {
-                    if (err) {
-                        return next(err);
-                    }
-                    res.json(article);
-                });
-            });
-        }
-    });
-};
-
-module.exports.removeFavArticle = function (req, res, next) {
-    // First, delete feed record from user feeds array 
-    req.user.favourites.forEach(function (elem, index, array) {
-        if (elem == req.params.id) {
-            req.user.favourites.splice(index, 1);
-            req.user.save(function (err) {
-                if (err) return handleError(err);
-            });
-        }
-    });
-
-    // Delete feed from database
-    return Article.findById(req.params.id, function (err, article) {
-        if (!article) {
-            res.statusCode = 404;
-            return res.send({
-                error: ERRORS.article_not_found
-            });
-        }
-        return article.remove(function (err) {
-            if (!err) {
-                return res.send({
-                    status: 'OK'
-                });
-            } else {
-                res.statusCode = 500;
-                log.error(ERRORS.internal_error, res.statusCode, err.message);
-                return res.send({
-                    error: ERRORS.article_not_found
-                });
-            }
-        });
-    });
-}
 
 module.exports.remove = function (req, res, next) {
-    // First, delete feed record from user feeds array 
-    req.user.feeds.forEach(function (elem, index, array) {
-        if (elem == req.params.id) {
-            req.user.feeds.splice(index, 1);
-            req.user.save(function (err) {
-                if (err) return handleError(err);
-            });
-        }
-    });
+	req.user.populate("feedsDictionary.feeds", function (err, user) {
+		var foundCategoryIndex,
+			foundCategory = null,
+			foundFeedIndex,
+			foundFeed = null;
 
-    // Delete feed from database
-    return Feed.findById(req.params.id, function (err, feed) {
-        if (!feed) {
-            res.statusCode = 404;
-            return res.send({
-                error: ERRORS.feed_not_found
-            });
-        }
+		for (var i = 0, array = req.user.feedsDictionary; i < array.length; i++) {
+			for (var j = 0, feeds = array[i].feeds; j < feeds.length; j++) {
+				if (feeds[j]._id == req.params.id) {
+					foundFeed = feeds[j];
+					foundFeedIndex = j;
+					foundCategory = array[i];
+					foundCategoryIndex = i;
+				}
+			}
+		}
 
-        return feed.remove(function (err) {
-            if (!err) {
-                return res.send({
-                    status: 'OK'
-                });
-            } else {
-                res.statusCode = 500;
-                log.error(ERRORS.internal_error, res.statusCode, err.message);
-                return res.send({
-                    error: ERRORS.feed_not_found
-                });
-            }
-        });
-    });
+		if (!foundCategory) {
+			return res.send({
+				message: msg.ERRORS.cant_delete_feed_no_such_cat
+			});
+		}
+
+		if (!foundFeed) {
+			return res.send({
+				message: msg.ERRORS.cant_delete_feed_no_such_feed
+			});
+		}
+
+		Feed.findById(req.params.id, function (err, feed) {
+			if (err) {
+				return next(err);
+			}
+			if (!feed) {
+				return next(new Error(msg.ERRORS.feed_not_found));
+			}
+			if (feed.currentSubscriptions > 0) {
+				feed.currentSubscriptions--;
+			}
+			feed.save(function (err) {
+				if (err) return next(err);
+			});
+		});
+
+		if (foundCategory.feeds.length === 1) {
+			req.user.feedsDictionary.splice(foundCategoryIndex, 1);
+		}
+		else {
+			foundCategory.feeds.splice(foundFeedIndex, 1);
+		}
+
+		req.user.save(function (err, user) {
+			if (err) return next(err);
+			res.statusCode = 200;
+			return res.send();
+		});
+	});
+}
+
+module.exports.setCategoryOrder = function (req, res, next) {
+	var newFeedsDictionary = [],
+		lookup = {};
+
+	for (var i = 0, array = req.user.feedsDictionary; i < array.length; i++) {
+		lookup[array[i].category] = array[i];
+	}
+	
+	for (var i = 0; i < req.body.newCategories.length; i++) {
+		newFeedsDictionary.push(lookup[req.body.newCategories[i]]);
+	}
+
+	req.user.feedsDictionary = newFeedsDictionary;
+	req.user.save(function (err) {
+		if (err) return next(err);
+		res.statusCode = 200;
+		return res.send();
+	});
+}
+
+module.exports.setFeedsOrder = function (req, res, next) {
+	req.user.feedsDictionary = req.body;
+
+	req.user.save(function (err) {
+		if (err) return next(err);
+		res.statusCode = 200;
+		return res.send();
+	});
+}
+
+module.exports.setFavsCategoryOrder = function (req, res, next) {
+	var newFavsDictionary = [],
+		lookup = {};
+
+	for (var i = 0, array = req.user.favouritesDictionary; i < array.length; i++) {
+		lookup[array[i].category] = array[i];
+	}
+
+	for (var i = 0; i < req.body.newCategories.length; i++) {
+		newFavsDictionary.push(lookup[req.body.newCategories[i]]);
+	}
+
+	req.user.favouritesDictionary = newFavsDictionary;
+	req.user.save(function (err) {
+		if (err) return next(err);
+		res.statusCode = 200;
+		return res.send();
+	});
+}
+
+module.exports.changeFeedCategory = function (req, res, next) {
+	if (!req.body.id || !req.body.category || !req.body.newCategory) {
+		res.status(404).send({
+			message: msg.ERRORS.not_found
+		});
+	}
+
+	req.user.populate("feedsDictionary.feeds", function (err, user) {
+		var lookup = {};
+		for (var i = 0, array = req.user.favouritesDictionary; i < array.length; i++) {
+			lookup[array[i].category] = array[i];
+		}
+
+		for (var i = 0, array = req.user.feedsDictionary; i < array.length; i++) {
+			if (array[i].category == req.body.category) {
+				for (var j = 0, feeds = array[i].feeds; j < feeds.length; j++) {
+					if (feeds[j]._id == req.body.id) {
+						array[i].feeds.splice(j, 1);
+						if (!array[i].feeds.length) {
+							array.splice(i, 1);
+						}
+						var pushedToExistin = false;
+						for (var i = 0, array = req.user.feedsDictionary; i < array.length; i++) {
+							if (array[i].category == req.body.newCategory) {
+								array[i].feeds.push(req.body.id);
+								pushedToExistin = true;
+							}
+						}
+						if (!pushedToExistin) {
+							var obj = {
+								category: req.body.newCategory,
+								feeds: []
+							}
+
+							obj.feeds.push(req.body.id);
+							req.user.feedsDictionary.push(obj);
+						}
+						
+						req.user.save(function (err) {
+							if (err) return next(err);
+							res.statusCode = 200;
+							return res.send();
+						});
+					}
+				}
+			}
+		}
+	});
 }
