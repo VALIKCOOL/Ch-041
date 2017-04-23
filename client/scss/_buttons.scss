@@ -27,6 +27,14 @@
 	}
 }
 
+.app-link-disabled{
+	.app-btn{
+		cursor: no-drop;
+		pointer-events: none;
+		opacity: 0.4;
+	}
+}
+
 .app-btn-blue {
 	color: white;
 	background-color: $blue-btn-active-color;
@@ -116,7 +124,7 @@ button[disabled] {
 	border-radius: $main-border-radius;
 	transition: $app-transition;
 	cursor: pointer;
-	
+
 	&:visited {
 		border: none;
 	}
@@ -272,14 +280,14 @@ a.sharing-btn {
 }
 .soc-btn {
 	width: 145px;
-	margin: 5px 5px 5px 0px;	
+	margin: 5px 5px 5px 0px;
 }
 
 .terms-btn {
 	font-weight: 600;
 	font-size: 16px;
 	margin-right: 0;
-	border: 1px solid #cccccc; 
+	border: 1px solid #cccccc;
 }
 
 .close:hover {

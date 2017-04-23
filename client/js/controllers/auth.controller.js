@@ -25,7 +25,6 @@
 			$scope.session;
 			$scope.test = 5;
 
-
 			var ERRORS = {
 				field_required: 'This field is required',
 				email_example: 'Please, use example: jacksparrow@gmail.com',
@@ -43,7 +42,7 @@
 						}
 					authService.register($scope.user).error(function (error) {
 						dashboardService.hideLoading();
-                        $scope.linkProvider = null;    
+                        $scope.linkProvider = null;
 						$scope.error = error;
 					}).then(function (res) {
 						dashboardService.hideLoading();
@@ -51,9 +50,13 @@
                             var symbol = $scope.user.email.indexOf('@');
 						    var emailAgent = $scope.user.email.slice(symbol + 1);
                             $scope.infoMessage = res.data.message;
-						    $scope.linkProvider = emailAgent;    
-                            $scope.error = null;    
+						    $scope.linkProvider = emailAgent;
+                            $scope.error = null;
                         }
+						else if(res.status === 200){
+							toasterService.success("Registration completed", {delay: 6000});
+							$state.go("home");
+						}
 					});
 				}
 			};
@@ -91,7 +94,8 @@
 					$scope.error = error.message;
 				}).then(function (response) {
                     $scope.error = null;
-					toasterService.info('An e-mail has been sent to ' + $scope.confirm_email.email + ' with further instructions.', {delay:5000});
+					$state.go("home")
+					toasterService.info('An e-mail has been sent to ' + $scope.confirm_email.email + ' with further instructions.', {delay:6000});
 				});
 			}
 

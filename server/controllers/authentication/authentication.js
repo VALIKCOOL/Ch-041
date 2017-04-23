@@ -42,6 +42,43 @@ module.exports.register = function (req, res, next) {
 	if (passAccepted) {
 
 		User.findOne({ email: req.body.email }, function (err, existingUser) {
+			if (existingUser && !req.body.verifyEmail && req.body.counter !== 0) {
+                console.log("Return first");
+				return res.status(203).json({
+					message: msg.ERRORS.check_your_email
+				});
+			}
+			if (existingUser && existingUser.verifiedUser && (!existingUser.google || !existingUser.facebook || !existingUser.twitter || !existingUser.linkedin)) {
+                console.log("Return second");
+				return res.status(409).json({
+					message: msg.ERRORS.email_taken_or_not_approved
+				});
+			}
+
+			if (existingUser && !existingUser.verifiedUser && req.body.verifyEmail) {
+				existingUser.emailVerification = true;
+				existingUser.verifiedUser = true;
+				existingUser.date_of_signup = new Date();
+				if ((req.body.password === existingUser.tempPassword) && (existingUser.emailToken === req.body.verifyEmail)) {
+					existingUser.tempPassword = '';
+					existingUser.save(function (err, result) {
+						if (err) {
+                            console.log("Return third");
+							return res.status(500).json({
+								message: err.message
+							});
+						}
+                        console.log("Return fourth");
+						return res.send({
+							token: config.createJWT(result)
+						});
+					});
+				} else {
+					return res.status(400).json({
+						message: msg.ERRORS.pass_or_token_not_match
+					});
+				}
+			}
 			if (!req.body.verifyEmail && req.body.counter === 0) {
 				userEmail = req.body.email;
 				emailToken = config.createEmailJWT(req.body.email);
@@ -63,6 +100,8 @@ module.exports.register = function (req, res, next) {
 				});
 
 				if (req.body.email !== arrayOfEmails[0]) {
+					console.log(req.body.email);
+					console.log(arrayOfEmails[0]);
 					config.smtpTransport.sendMail(mailOptions, function (error, response) {
 						if (!error) {
 							arrayOfEmails.push(req.body.email);
@@ -87,43 +126,6 @@ module.exports.register = function (req, res, next) {
 				});
 			}
 
-			if (existingUser && !req.body.verifyEmail && req.body.counter !== 0) {
-                console.log("Return first");
-				return res.status(203).json({
-					message: msg.ERRORS.check_your_email
-				});
-			}
-			if (existingUser && existingUser.verifiedUser && (!existingUser.google || !existingUser.facebook || !existingUser.twitter || !existingUser.linkedin)) {
-                console.log("Return second");                
-				return res.status(409).json({
-					message: msg.ERRORS.email_taken_or_not_approved
-				});
-			}
-
-			if (existingUser && !existingUser.verifiedUser && req.body.verifyEmail) {
-				existingUser.emailVerification = true;
-				existingUser.verifiedUser = true;
-				existingUser.date_of_signup = new Date();
-				if ((req.body.password === existingUser.tempPassword) && (existingUser.emailToken === req.body.verifyEmail)) {
-					existingUser.tempPassword = '';
-					existingUser.save(function (err, result) {
-						if (err) {
-                            console.log("Return third");                
-							return res.status(500).json({
-								message: err.message
-							});
-						}
-                        console.log("Return fourth");                
-						return res.send({
-							token: config.createJWT(result)
-						});
-					});
-				} else {
-					return res.status(400).json({
-						message: msg.ERRORS.pass_or_token_not_match
-					});
-				}
-			}
 		});
 	}
 };
@@ -152,7 +154,7 @@ module.exports.login = function (req, res) {
 			res.send({
 				token: config.createJWT(user),
 				user: user,
-				message: msg.ERRORS.login 
+				message: msg.ERRORS.login
 			});
 		});
 	});
@@ -193,7 +195,7 @@ module.exports.forgotPass = function (req, res) {
                 'If you did not request this, please ignore this email and your password will remain unchanged.\n'
             };
             config.smtpTransport.sendMail(mailOptions, function (err) {
-                done(err, 'done');                      
+                done(err, 'done');
             });
         }
 	], function (err) {

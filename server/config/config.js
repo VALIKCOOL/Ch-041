@@ -13,11 +13,11 @@ module.exports = {
 
 	LINKEDIN_SECRET: process.env.LINKEDIN_SECRET || '7pYAnN0nJf8ZiDVB',
 	// OAuth 1.0
-	TWITTER_KEY: process.env.TWITTER_KEY || 'dMtO7Tp6iLeG1xI1cknfuwMQd',
-	TWITTER_SECRET: process.env.TWITTER_SECRET || '9ld2ELLenIzJCVYICQwhqFkAtALYijgypuAomgsDer1FzCX62E',
-	
+	TWITTER_KEY: process.env.TWITTER_KEY || 'RIBeAXNt5BgRIUCsbtsxedzWX',
+	TWITTER_SECRET: process.env.TWITTER_SECRET || 'kOOsg8w6TE3XGz95nW7Fv7P4VwBNGWz4mdTABHoz9XEymaQh7s',
+
 	regExp: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$/,
-	
+
 	createJWT: function (user) {
 		var payload = {
 			sub: user._id,
@@ -35,7 +35,7 @@ module.exports = {
 	};
 	return jwt.encode(payload, this.TOKEN_SECRET);
 	},
-	
+
 	smtpTransport : nodemailer.createTransport("SMTP",{
 	service: "Gmail",
 		auth: {
