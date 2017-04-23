@@ -2,7 +2,6 @@
 	'use strict';
 	angular.module('rssreader').controller('FeedsController', ['$scope', '$state', '$stateParams', 'Upload', '$http', 'toasterService', 'feedsService', 'dashboardService', 'articlesService', 'authService', 'profileService', function ($scope, $state, $stateParams, Upload, $http, toasterService, feedsService, dashboardService, articlesService, authService, profileService) {
 		var changeCatObj = {};
-
 		$scope.advicedCategory = $stateParams.category;
 		$scope.obj = {};
 		$scope.feeds = feedsService.feedsDictionary;
@@ -77,7 +76,7 @@
 					feedsService.getAllFeeds().then(function (res) {
 						$state.go('dashboard.' + dashboardService.getViewMode(), { type: 'feed', value1: feedId });
 					});
-
+					dashboardService.hideLoading();
 				}, function (err) {
 					if (typeof err === 'string') {
 						$scope.error = err;
@@ -101,7 +100,6 @@
 					else {
 						$scope.error = err.data.message;
 					}
-				}).finally(function () {
 					dashboardService.hideLoading();
 				});
 			}

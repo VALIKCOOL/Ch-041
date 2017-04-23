@@ -41,7 +41,7 @@ module.exports.add = function (req, res, next) {
 			message: msg.ERRORS.enter_feed_url
 		});
 	}
-	
+
 	if (req.body.category === undefined) {
 		return res.status(400).json({
 			message: msg.ERRORS.choose_cat
@@ -96,7 +96,7 @@ module.exports.add = function (req, res, next) {
 						}
 						res.json(currentFeed);
 					});
-				});		        
+				});
 			}
 
 			if (!currentFeed) {
@@ -107,7 +107,7 @@ module.exports.add = function (req, res, next) {
 					if (err) {
 						return next(err);
 					}
-					if (!foundCategory) {		                   
+					if (!foundCategory) {
 							var newFeedElement = {
 								category: req.body.category,
 								feeds: []
@@ -197,7 +197,7 @@ module.exports.setCategoryOrder = function (req, res, next) {
 	for (var i = 0, array = req.user.feedsDictionary; i < array.length; i++) {
 		lookup[array[i].category] = array[i];
 	}
-	
+
 	for (var i = 0; i < req.body.newCategories.length; i++) {
 		newFeedsDictionary.push(lookup[req.body.newCategories[i]]);
 	}
@@ -277,7 +277,7 @@ module.exports.changeFeedCategory = function (req, res, next) {
 							obj.feeds.push(req.body.id);
 							req.user.feedsDictionary.push(obj);
 						}
-						
+
 						req.user.save(function (err) {
 							if (err) return next(err);
 							res.statusCode = 200;

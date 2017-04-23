@@ -14,7 +14,7 @@ var mongoose = require('mongoose'),
 	emailToken, mailOptions, host, link, userEmail,
 	arrayOfEmails = [];
 
-module.exports.register = function (req, res) {
+module.exports.register = function (req, res, next) {
 	var passAccepted = false;
 
 	if (req.body.verifyEmail) {
@@ -42,7 +42,6 @@ module.exports.register = function (req, res) {
 	if (passAccepted) {
 
 		User.findOne({ email: req.body.email }, function (err, existingUser) {
-
 			if (!req.body.verifyEmail && req.body.counter === 0) {
 				userEmail = req.body.email;
 				emailToken = config.createEmailJWT(req.body.email);
@@ -65,33 +64,37 @@ module.exports.register = function (req, res) {
 
 				if (req.body.email !== arrayOfEmails[0]) {
 					config.smtpTransport.sendMail(mailOptions, function (error, response) {
-						if (error) {
-							res.end("error");
-						} else {
+						if (!error) {
 							arrayOfEmails.push(req.body.email);
-							res.end("sent");
 						}
 					});
 				}
 				user.save(function (err, result) {
-					if (err) {
-						return res.status(400).json({
-							message: msg.ERRORS.check_your_email	
-						});
-					}
-					return res.status(400).json({
-						message: msg.ERRORS.email_verification,
-						user: user
-					});
+                    if(!res.headersSent){
+                        if (err) {
+                            return res.status(400).json({
+                                message: msg.ERRORS.check_your_email,
+                                user: user
+                            });
+                        }
+                        else {
+                            return res.status(203).json({
+                                message: msg.ERRORS.email_verification,
+                                user: user
+                            });
+                        }
+                    }
 				});
 			}
 
 			if (existingUser && !req.body.verifyEmail && req.body.counter !== 0) {
-				return res.status(400).json({
+                console.log("Return first");
+				return res.status(203).json({
 					message: msg.ERRORS.check_your_email
 				});
 			}
 			if (existingUser && existingUser.verifiedUser && (!existingUser.google || !existingUser.facebook || !existingUser.twitter || !existingUser.linkedin)) {
+                console.log("Return second");                
 				return res.status(409).json({
 					message: msg.ERRORS.email_taken_or_not_approved
 				});
@@ -105,16 +108,18 @@ module.exports.register = function (req, res) {
 					existingUser.tempPassword = '';
 					existingUser.save(function (err, result) {
 						if (err) {
-							res.status(500).json({
+                            console.log("Return third");                
+							return res.status(500).json({
 								message: err.message
 							});
 						}
-						res.send({
+                        console.log("Return fourth");                
+						return res.send({
 							token: config.createJWT(result)
 						});
 					});
 				} else {
-					res.status(400).json({
+					return res.status(400).json({
 						message: msg.ERRORS.pass_or_token_not_match
 					});
 				}
@@ -159,39 +164,44 @@ module.exports.forgotPass = function (req, res) {
 			var token = config.createEmailJWT(req.body.email);
 			done(null, token);
 		},
-	function (token, done) {
-		User.findOne({ email: req.body.email }, function (err, user) {
-			if (!user) {
-				return res.status(404).send({
-					message: msg.ERRORS.email_not_found
-				});
-			}
-			user.resetPasswordToken = token;
-			user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        function (token, done) {
+            User.findOne({ email: req.body.email }, function (err, user) {
+                if (!user) {
+                    return res.status(400).send({
+                        message: msg.ERRORS.email_not_found
+                    });
+                }
+                user.resetPasswordToken = token;
+                user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
 
-			user.save(function (err) {
-				done(err, token, user);
-			});
-		});
-	},
-	function (token, user, done) {
-		var mailOptions = {
-			to: user.email,
-			from: 'passwordreset@demo.com',
-			subject: 'Node.js Password Reset',
-			html: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
-			  'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
-			  '<a href="http://' + req.headers.host + '/#/reset/' + token + '">http://' + req.headers.host + '/#/reset/' + token + '</a>\n\n' +
-			  'If you did not request this, please ignore this email and your password will remain unchanged.\n'
-		};
-		config.smtpTransport.sendMail(mailOptions, function (err) {
-			done(err, 'done');
-		});
-	}
+                user.save(function (err) {
+                    done(err, token, user);
+                });
+
+                return res.status(200).send({
+                });
+            });
+        },
+        function (token, user, done) {
+            var mailOptions = {
+                to: user.email,
+                from: 'passwordreset@demo.com',
+                subject: 'Rss Reader Password Reset',
+                html: 'You are receiving this because you have requested the reset of the password for your account.\n\n' +
+                'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
+                '<a href="http://' + req.headers.host + '/#/reset/' + token + '">http://' + req.headers.host + '/#/reset/' + token + '</a>\n\n' +
+                'If you did not request this, please ignore this email and your password will remain unchanged.\n'
+            };
+            config.smtpTransport.sendMail(mailOptions, function (err) {
+                done(err, 'done');                      
+            });
+        }
 	], function (err) {
-		if (err) return next(err);
+		if (err) {
+            return next(err);
+        }
 		res.status(200);
-		return res.redirect('/#/forgot');
+		return res;
 	});
 };
 

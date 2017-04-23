@@ -28,7 +28,9 @@
                 })
             },
             forgot: function (confirm_email) {
-                return $http.post('/forgot', confirm_email).success(function (data) {
+                return $http.post('/forgot', confirm_email)
+                .success(function (data) {
+                    console.log(data);
                 }).error(function (err) {
                     console.log(err.message);
                 })

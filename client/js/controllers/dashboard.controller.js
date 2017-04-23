@@ -32,7 +32,7 @@
 		$scope.checkIfToggled = function (mode) {
 			return dashboardService.getViewMode() === mode;
 		}
-		
+
 		$scope.checkSortType = function (type, order) {
 			var sortType = dashboardService.getSortParam();
 			if (type == sortType.type && order == sortType.order) {
@@ -40,7 +40,7 @@
 			}
 			return false;
 		}
-		
+
 		$scope.onViewChange = function (view) {
 			switch (view) {
 				case 'view-mode1':
@@ -137,7 +137,7 @@
 					return "Oldest";
 				}
 				case 'feed': {
-					return "By Feed";            
+					return "By Feed";
 				}
 			}
 		}

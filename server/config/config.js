@@ -8,8 +8,8 @@ module.exports = {
 	TOKEN_SECRET: process.env.TOKEN_SECRET || '496c59a0260a0c999ae39eccdff5ff03_rss',
 
 	// OAuth 2.0
-	FACEBOOK_SECRET: process.env.FACEBOOK_SECRET || '413152de5ff6197790927d4052263ab1',
-	GOOGLE_SECRET: process.env.GOOGLE_SECRET || 'pGT_4I5yjrhPGyohUyTEKsqe',
+	FACEBOOK_SECRET: process.env.FACEBOOK_SECRET || 'e1e2ef27d6162d356bd4de376ddb4e77',
+	GOOGLE_SECRET: process.env.GOOGLE_SECRET || 'SWHLC3Uu4sE7ei3YH_2U6o7P',
 
 	LINKEDIN_SECRET: process.env.LINKEDIN_SECRET || '7pYAnN0nJf8ZiDVB',
 	// OAuth 1.0
@@ -39,8 +39,8 @@ module.exports = {
 	smtpTransport : nodemailer.createTransport("SMTP",{
 	service: "Gmail",
 		auth: {
-			user: 'rss.reader.app.ch.041@gmail.com',
-			pass: 'rssreader'
+			user: 'rssfeedersampleapp@gmail.com',
+			pass: 'Qwerty12_'
 		}
 	})
 

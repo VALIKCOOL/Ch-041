@@ -28,7 +28,7 @@
 		        delete $scope.favsToDelete[id];
 		    }
 		}
-		
+
 		$scope.checkIfFavourites = function (article) {
 			if (!article) {
 				return false;
@@ -68,7 +68,7 @@
 				$scope.newCategory = {};
 			}
 		}
-		
+
 		$scope.getTitle = function (article, index) {
 			if (index == articlesService.articles.length - 1 || !article) {
 				return '';
@@ -150,7 +150,7 @@
 				dashboardService.hideLoading();
 			});
 		}
-		
+
 		$scope.removeFavourite = function (article, cat) {
 			$scope.favForRemove = article;
 			toasterService.confirm({
@@ -225,6 +225,10 @@
 		}
 
 		$rootScope.$on('$stateChangeStart', function (ev, to, toParams, from, fromParams) {
+            if(from.name === "login"){
+                $rootScope.changeList = false;
+                return;
+            }
 		    $rootScope.changeList = false;
 		    if (from.name !== to.name) {
 		        $rootScope.changeList = true;
@@ -234,7 +238,7 @@
 		                break;
 		            }
 		        }
-		    }		    
+		    }
 		});
 
 		angular.element(document.body).bind('click', function (e) {
@@ -277,7 +281,7 @@
 						}
 						$scope.articleForRead = articlesService.articleForRead;
 						return res;
-					}, function (err) {		                
+					}, function (err) {
 						console.log(err);
 						return err;
 					}).finally(function () {

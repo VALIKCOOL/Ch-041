@@ -14,6 +14,5 @@
   			$rootScope.lang = 'en';
 			$rootScope.default_float = 'left';
   			$rootScope.default_direction = 'ltr';
-  		
-}])
+}]);
 })();

@@ -22,7 +22,8 @@
 				<div class="form-group">
 					<div class="row">
 						<div class="col-xs-12 col-md-5 center-children">
-							<img ng-hide="!currentUser().avatar" ng-src="{{currentUser().avatar}}" class="img-circle profile-img-square img-responsive" name="image" alt="User Image">
+							<div ng-hide="!currentUser().avatar" style="background-image: url({{currentUser().avatar}})" class="img-circle profile-img-square img-responsive" name="image" alt="User Image"></div>
+							<!--<div ng-hide="!currentUser().avatar" ng-src="{{currentUser().avatar}}" class="img-circle profile-img-square img-responsive" name="image" alt="User Image"></div>-->
 							<img ng-show="!currentUser().avatar" class="img-circle profile-img-square img-responsive" alt='user picture' ng-src='{{currentUser().picture}}' src="/assets/images/profile.png">
 						</div>
 						<div class="col-xs-12 col-md-7 clearfix">
