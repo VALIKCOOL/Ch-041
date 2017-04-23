@@ -38,16 +38,16 @@ IF NOT DEFINED NEXT_MANIFEST_PATH (
   )
 )
 
-::IF NOT DEFINED KUDU_SYNC_CMD (
-::  :: Install kudu sync
-::  echo Installing Kudu Sync
-::  call npm install kudusync -g --silent
-::  IF !ERRORLEVEL! NEQ 0 goto error
-::
-::  :: Locally just running "kuduSync" would also work
-::  SET KUDU_SYNC_CMD=%appdata%\npm\kuduSync.cmd
-::)
-::goto Deployment
+IF NOT DEFINED KUDU_SYNC_CMD (
+  :: Install kudu sync
+  echo Installing Kudu Sync
+  call npm install kudusync -g --silent
+  IF !ERRORLEVEL! NEQ 0 goto error
+
+  :: Locally just running "kuduSync" would also work
+  SET KUDU_SYNC_CMD=%appdata%\npm\kuduSync.cmd
+)
+goto Deployment
 
 :: Utility Functions
 :: -----------------
@@ -63,7 +63,7 @@ IF DEFINED KUDU_SELECT_NODE_VERSION_CMD (
     SET /p NODE_EXE=<"%DEPLOYMENT_TEMP%\__nodeVersion.tmp"
     IF !ERRORLEVEL! NEQ 0 goto error
   )
-  
+
   IF EXIST "%DEPLOYMENT_TEMP%\__npmVersion.tmp" (
     SET /p NPM_JS_PATH=<"%DEPLOYMENT_TEMP%\__npmVersion.tmp"
     IF !ERRORLEVEL! NEQ 0 goto error
@@ -109,12 +109,12 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 goto end
 
 :: Execute command routine that will echo out when error
-:::ExecuteCmd
-::setlocal
-::set _CMD_=%*
-::call %_CMD_%
-::if "%ERRORLEVEL%" NEQ "0" echo Failed exitCode=%ERRORLEVEL%, command=%_CMD_%
-::exit /b %ERRORLEVEL%
+:ExecuteCmd
+setlocal
+set _CMD_=%*
+call %_CMD_%
+if "%ERRORLEVEL%" NEQ "0" echo Failed exitCode=%ERRORLEVEL%, command=%_CMD_%
+exit /b %ERRORLEVEL%
 
 :error
 endlocal
