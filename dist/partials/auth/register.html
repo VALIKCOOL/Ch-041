@@ -31,10 +31,15 @@
 						<div class="center-children submit-btn">
 							<button translate type="submit" class="sub-btn center-block app-btn app-btn-blue" ng-disabled="!agreeWith">Sign Up</button>
 						</div>
-						<div class="alert alert-info text-center animate-error" role="alert" ng-show="error">
+						<div class="alert alert-danger text-center animate-error" role="alert" ng-show="error">
 							<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
 							<span class="sr-only">Error:</span>
 							<span id="error" ng-bind="error.message | translate "></span>
+						</div>
+						<div class="alert alert-info text-center animate-error" role="alert" ng-show="linkProvider">
+							<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+							<span class="sr-only">Info:</span>
+							<span id="error" ng-bind="infoMessage | translate "></span>
 						</div>
 						<div ng-show='linkProvider' class="text-center">
 							<a translate class="link" href="http://{{linkProvider}}" target="_self">Click to move on you mail provider site</a>

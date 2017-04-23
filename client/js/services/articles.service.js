@@ -160,7 +160,7 @@
 						return res;
 					});
 				},
-				removeMultiFavourites: function () { 
+				removeMultiFavourites: function () {
 				    return $http.post('/deleteMultiFavourites', obj.favsToDelete);
 				},
 				getAdvicedArticles: function () {
@@ -184,7 +184,6 @@
 				resetArticles: function () {
 					dashboardService.hideSortList.state = false;
 					dashboardService.readSingleFeed.state = false;
-					
 					dashboardService.resetFeed();
 					this.totalDisplayed = this.displayedIncrement;
 					temp_articles.length = 0;
@@ -252,17 +251,11 @@
 				else return content.toString();
 			},
 			fetchArticles = function (feed, num, from) {
-				var articlesNum = ARTICLES_NUM;
-				if (num) {
-					articlesNum = num;
-				}
-				if (!from || from > num - 1) {
-					from = 0;
-				}
-				return $http.jsonp('https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=' + articlesNum + '&q=' + encodeURIComponent(feed.rsslink) + '&method=JSONP&callback=JSON_CALLBACK&output=xml')
-				.then(function (response) {					
+				from ? from : from = 0;
+				var yql = 'http://query.yahooapis.com/v1/public/yql?q=' + encodeURIComponent('select * from xml where url="' + feed.rsslink + '"') + '&format=xml&callback=?';
+				return $.getJSON(yql).then(function (data) {
 					var parser = new DOMParser(),
-						xmlDoc = parser.parseFromString(response.data.responseData.xmlString, 'text/xml'),
+						xmlDoc = parser.parseFromString(data.results[0], 'text/xml'),
 						items = [];
 					if (feed.format === 'RSS') {
 						items = xmlDoc.getElementsByTagName('item');
@@ -278,7 +271,10 @@
 								feed: feed._id
 							};
 							if (articleObj.title) {
-								articleObj.title.replaceAll('apos;', '\'')
+								articleObj.title = articleObj.title
+                                                .replaceAll('<![CDATA[', '')
+                                                .replaceAll(']]>', '')
+                                                .replaceAll('apos;', '\'')
 												.replaceAll('&apos;', '\'')
 												.replaceAll('&amp;', '')
 												.replaceAll('&#8217;', 'bb');
@@ -307,17 +303,80 @@
 								feed: feed._id
 							};
 							if (articleObj.title) {
-								articleObj.title.replaceAll('apos;', '\'')
+								articleObj.title = articleObj.title
+                                                .replaceAll('<![CDATA[', '')
+                                                .replaceAll(']]>', '')
+                                                .replaceAll('apos;', '\'')
 												.replaceAll('&apos;', '\'')
 												.replaceAll('&amp;', '')
 												.replaceAll('&#8217;', 'bb');
-							}
+							};
 							articleObj.content = articleObj.content ? articleObj.content : articleObj.title;
 							temp_articles.push(articleObj);
 						}
 					}
 					return temp_articles;
 				});
+
+				// return $http.jsonp('https://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=' + articlesNum + '&q=' + encodeURIComponent(feed.rsslink) + '&method=JSONP&callback=JSON_CALLBACK&output=xml')
+				// .then(function (response) {
+				// 	var parser = new DOMParser(),
+				// 		xmlDoc = parser.parseFromString(response.data.responseData.xmlString, 'text/xml'),
+				// 		items = [];
+				// 	if (feed.format === 'RSS') {
+				// 		items = xmlDoc.getElementsByTagName('item');
+				// 		if (from > items.length) {
+				// 			from = 0;
+				// 		}
+				// 		for (var i = from; i < items.length; i++) {
+				// 			var articleObj = {
+				// 				title: items[i].getElementsByTagName('title')[0].innerHTML,
+				// 				link: items[i].getElementsByTagName('link')[0].textContent,
+				// 				img: getImage(items[i], feed.format),
+				// 				content: getContent(items[i], feed.format),
+				// 				feed: feed._id
+				// 			};
+				// 			if (articleObj.title) {
+				// 				articleObj.title.replaceAll('apos;', '\'')
+				// 								.replaceAll('&apos;', '\'')
+				// 								.replaceAll('&amp;', '')
+				// 								.replaceAll('&#8217;', 'bb');
+				// 			}
+				// 			if (items[i].getElementsByTagName('pubDate')[0]) {
+				// 				articleObj.date = Date.parse(items[i].getElementsByTagName('pubDate')[0].textContent);
+				// 			}
+				// 			else if (!items[i].getElementsByTagName('pubDate')[0] && !articleObj.img && !articleObj.content) {
+				// 				continue;
+				// 			}
+				// 			articleObj.content = articleObj.content ? articleObj.content : articleObj.title;
+				// 			temp_articles.push(articleObj);
+				// 		}
+				// 	} else if (feed.format === 'ATOM') {
+				// 		items = xmlDoc.getElementsByTagName('entry');
+				// 		if (from > items.length) {
+				// 			from = 0;
+				// 		}
+				// 		for (var i = from; i < items.length; i++) {
+				// 			var articleObj = {
+				// 				title: items[i].getElementsByTagName('title')[0].textContent,
+				// 				link: angular.element(items[i].getElementsByTagName('link'))[0].attributes['href'].value,
+				// 				img: getImage(items[i], feed.format),
+				// 				content: getContent(items[i], feed.format),
+				// 				date: Date.parse(items[i].getElementsByTagName('published')[0].textContent),
+				// 				feed: feed._id
+				// 			};
+				// 			if (articleObj.title) {
+				// 				articleObj.title.replaceAll('apos;', '\'')
+				// 								.replaceAll('&apos;', '\'')
+				// 								.replaceAll('&amp;', '')
+				// 								.replaceAll('&#8217;', 'bb');
+				// 			}
+				// 			articleObj.content = articleObj.content ? articleObj.content : articleObj.title;
+				// 			temp_articles.push(articleObj);
+				// 		}
+				// 	}
+				// 	return temp_articles;
+				// });
 			},
 			getArticleDataByLink = function (link) {
 				return $http.post('/getFavArticle', { link: link });

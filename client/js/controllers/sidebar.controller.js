@@ -27,7 +27,7 @@
 				dashboardService.hideLoading();
 			});
 		}
-		
+
 		$scope.onFeedsCatDrag = function (index) {
 			dashboardService.displayLoading();
 			$scope.feeds.splice(index, 1);
@@ -63,7 +63,7 @@
 			// if there is only one category and feed, return this feed articles
 			if ($scope.feeds.length === 1 && $scope.feeds[0].feeds.length === 1) {
 				$state.go('dashboard.' + dashboardService.getViewMode(), { type: 'feed', value1: $scope.feeds[0].feeds[0]._id});
-			} else {				
+			} else {
 				$state.go('dashboard.' + dashboardService.getViewMode(), { type: 'all', value1: '', value2: '' });
 			}
 		}

@@ -50,9 +50,9 @@ gulp.task('sass', function () {
 
 gulp.task('scripts', function () {
 	return gulp.src(['./client/js/**/*.js', '!./client/js/**/*.spec.js', '!./client/js/app.min.js', '!./client/js/app.js'])
+		.pipe(sourcemaps.init())
 		.pipe(concat('app.js'))
 		.pipe(gulp.dest('./client/js/'))
-		.pipe(sourcemaps.init())
 		.pipe(uglify())
 		.pipe(rename({
 			suffix: '.min'
@@ -82,7 +82,7 @@ gulp.task('build', ['scripts', 'sass'], function () {
 
 	gulp.src(['client/translation/**'])
 		.pipe(gulp.dest('./dist/translation/'));
-	
+
 	gulp.src(['client/bower_components/flag-icon-css/flags/**'])
 		.pipe(gulp.dest('./dist/flags/'));
 

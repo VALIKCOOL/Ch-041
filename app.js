@@ -25,23 +25,24 @@ var routes = require('./server/routes/index');
 app.set('port', process.env.PORT || 8080);
 app.set('base url', process.env.URL || 'http://localhost');
 
-mongoose.connect(process.env.DB_URL || 'mongodb://feedsUser:Ch-041feedsUser@ds044979.mlab.com:44979/feeds');
+mongoose.connect(process.env.DB_URL || 'mongodb://db-user:db-password@ds044979.mlab.com:44979/feeds');
 mongoose.connection.on('error', function (err) {
 	console.log('Error: Could not connect to MongoDB');
 });
 app.use(cors());
+app.use(logger());
 app.use(function (req, res, next) {
 	res.header('Access-Control-Allow-Origin', process.env.allowOrigin || 'http://localhost');
 	res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
 	res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 	next();
 });
-app.use(bodyParser.json()); 
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
 	extended: true
-})); 
+}));
 
-app.use(express.static(__dirname + '/dist'));
+app.use(express.static(__dirname + '/client'));
 app.use('/', routes);
 
 app.listen(app.get('port'));

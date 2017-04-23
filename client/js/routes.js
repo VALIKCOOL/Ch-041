@@ -36,9 +36,9 @@
 						}
 					}]
 				})
-				.state('forgot', {
-					url: '/forgot',
-					templateUrl: './partials/auth/forgot.html',
+				.state('forgotPassword', {
+					url: '/forgotPassword',
+					templateUrl: './partials/auth/forgotPassword.html',
 					controller: 'AuthController'
 				})
 				.state('reset', {
@@ -48,7 +48,7 @@
 					onEnter : ['$stateParams', 'transfer', '$window', function ($stateParams, transfer, $window) {
 						var payload = JSON.parse($window.atob($stateParams.token.split('.')[1]));
 						transfer.setObj($stateParams.token);
-						transfer.setEmail(payload.verifEmail);	
+						transfer.setEmail(payload.verifEmail);
 					}]
 				})
 				.state('verify', {
@@ -203,7 +203,7 @@
 				popupOptions: { width: 527, height: 582 }
 			});
 			$authProvider.facebook({
-				clientId: '173686319709284',
+				clientId: '183504072158109',
 				name: 'facebook',
 				url: '/auth/facebook',
 				authorizationEndpoint: 'https://www.facebook.com/v2.5/dialog/oauth',
@@ -220,7 +220,7 @@
 			});
 
 			$authProvider.google({
-				clientId: '806677097865-va2i3kq96mmu8i00t9k6q92ks1s9tg0l.apps.googleusercontent.com',
+				clientId: '712822861974-fh7e86606m3h16db3rvf6fcu3kkq01rq.apps.googleusercontent.com',
 				url: '/auth/google',
 				authorizationEndpoint: 'https://accounts.google.com/o/oauth2/auth',
 				redirectUri: window.location.origin,
